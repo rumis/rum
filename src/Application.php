@@ -1,0 +1,144 @@
+<?php
+
+namespace Rum;
+
+/**
+ * 
+ * @author huanjiesm
+ */
+class Application extends RouterGroup{
+    private $httpServe;
+    private $trees;
+    private $handleMethodNotAllowed;
+    private $noRoute;
+    private $noMethod;
+
+    /**
+     * 构造方法
+     * @author huanjiesm
+     */
+    public function __construct($opts){
+        parent::__construct('/',$this);
+
+        $this->handleMethodNotAllowed = !empty($opts['handleMethodNotAllowed'])?$opts['handleMethodNotAllowed']:false;
+        $this->noRoute = !empty($opts['noRoute'])?$opts['noRoute']:function(Request $req,Response $res){
+            return $this->default404Method($req,$res);
+        };
+        $this->noMethod = !empty($opts['noMethod'])?$opts['noMethod']:function(Request $req,Response $res){
+            return $this->default405Method($req,$res);
+        };
+    }
+    /**
+     * 启动
+     * @author huanjiesm
+     */
+    public function run($port=9501){
+        $this->httpServe = new \Swoole\Http\Server("0.0.0.0", $port,SWOOLE_BASE);
+        $this->httpServe->on('request', function ($request, $response) {
+            $req = new Request($request);
+            $res = new Response($response);
+            $this->handleHTTPRequest($req,$res);
+        });
+        $this->httpServe->start();
+    }
+
+    /**
+     * 添加路由
+     */
+    public function addRoute($method,$path,$handle){
+        if(!in_array($method,Method::S)){
+            echo '不支持的请求方法';
+            return;
+        }
+        if($path[0]!='/'){
+            echo '路由路径必须以/开头';
+            return;
+        }
+        if(empty($this->trees[$method])){
+            $this->trees[$method]=new Node();    
+        }
+        $this->trees[$method]->addRoute($path,$handle);
+    }
+
+    /**
+     * 创建新的路由组
+     * @author liumurong
+     */
+    public function group($path,...$middleware){
+        $g = new RouterGroup($path,$this);
+        $g->use(...$middleware);
+        return $g;
+    }
+
+    /**
+     * 静态路径
+     * @author huanjiesm
+     */
+    public function static($relativePath,$root){
+
+    }
+
+    /**
+     * 处理HTTP请求
+     */
+    public function handleHTTPRequest(Request &$req,Response &$res){
+        $method = $req->method();
+        $path = $req->path();
+        $root = $this->trees[$method];
+        // 路由存在
+        if(!empty($root)){
+            $handle = $root->getValue($path);
+            if(!empty($handle['handle'])){
+                $handle['handle']($req,$res);
+                return;
+            }
+        }
+        // 检测是否包含同PATH但是METHOD不同的路由，提示405错误
+        if($this->handleMethodNotAllowed){
+            foreach($this->trees as $m => $tree){
+                if($m!=$method){
+                    $handle = $root->getValue($path);
+                    if(!empty($handle)){
+                        $noMethod = $this->noMethod;
+                        $noMethod($req,$res);
+                        return;
+                    }
+                }
+            }
+        }
+        // 为包含路由，提示404错误。
+        $noRoute = $this->noRoute;
+        $noRoute($req,$res);
+    }
+
+    /**
+     * 设置404处理方法
+     */
+    public function resetNoRoute($handle){
+        $this->noRoute=$handle;
+    }
+    /**
+     * 设置405处理方法
+     */
+    public function resetNoMethod($handle){
+        $this->noMethod = $handle;
+    }
+
+    /**
+     * 默认的404方法
+     */
+    private function default404Method(Request $req,Response $res){
+        // code:405, content-type= MIME::PLAIN, body: '405 method not allowed'
+        echo '404';
+    }
+    /**
+     * 默认的405方法
+     */
+    private function default405Method(Request $req,Response $res){
+        // code:405, content-type= MIME::PLAIN, body: '405 method not allowed'
+        echo '405';
+    }
+
+    
+
+}

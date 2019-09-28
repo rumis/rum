@@ -1,0 +1,20 @@
+{
+    "name": "rumis/rum",
+    "description": "基于swoole的极简web框架",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "john huanjie",
+            "email": "huanjiesm@163.com"
+        }
+    ],
+    "require": {
+        "php":">=7.3.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Rum\\":"./src"
+        }
+    }
+}
