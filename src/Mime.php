@@ -5,7 +5,7 @@ namespace Rum;
 /**
  * 常用MIME类型
  */
-class MIME{
+class Mime{
     const JSON = 'application/json';
     const HTML = 'text/html';
     const XML = 'application/xml';
