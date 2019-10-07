@@ -37,6 +37,8 @@ class Application extends RouterGroup{
         $this->httpServe->on('request', function ($request, $response) {
             $req = new Request($request);
             $res = new Response($response);
+
+            // 处理http请求
             $this->handleHTTPRequest($req,$res);
         });
         $this->httpServe->start();
@@ -106,7 +108,7 @@ class Application extends RouterGroup{
                 }
             }
         }
-        // 为包含路由，提示404错误。
+        // 未包含路由，提示404错误。
         $noRoute = $this->noRoute;
         $noRoute($req,$res);
     }

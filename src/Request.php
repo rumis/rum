@@ -6,9 +6,15 @@ namespace Rum;
 class Request{
 
     private $req;
+    private $param;
+    private $data;
+    private $cache;
 
-    public function __construct($req){
+    public function __construct($req,$param=[]){
         $this->req=$req;
+        $this->param=$param;
+        $this->cache=[];
+        $this->data=$req->post;
     }
 
     /**
@@ -16,14 +22,14 @@ class Request{
      * @author huanjiesm
      */
     public function method(){
-        return "GET";
+        return $this->req->server['request_method'];
     }
     /**
      * 请求的Path
      * @author huanjiesm
      */
     public function path(){
-        return '/test';
+        return $this->req->server['request_uri'];
     }
 
     /**
@@ -32,22 +38,22 @@ class Request{
      * @author huanjiesm
      */
     public function set($key,$val){
-
+        $this->cache[$key]=$val;
     }
     /**
      * 获取缓存的数据
      * @author huanjiesm
      */
     public function get($key){
-
+        return empty($this->cache[$key])?'':$this->cache[$key];
     }
     /**
      * URL参数
      * :,*
      * @author huanjiesm
      */
-    public function params($key=null){
-
+    public function params($key=''){
+        return empty($this->req->param[$key])?'':$this->req->param[$key];
     }
     /**
      * 查询参数
@@ -55,28 +61,43 @@ class Request{
      * @author huanjiesm
      */
     public function query($key=null){
-
+        if(empty($key)){
+            return $this->req->get;
+        }
+        return empty($this->req->get[$key])?'':$this->req->get[$key];
     }
     /**
      * 获取请求体数据
      * @author huanjiesm
      */
     public function body($key=null){
-
+        if(empty($key)){
+            return $this->data;
+        }
+        return empty($this->data[$key])?'':$this->data[$key];
     }
+
+    /**
+     * 设置新的Body参数
+     * 一般用于非表单类型的post数据解析
+     */
+    public function setBody($data){
+        $this->data=$data;
+    }
+
     /**
      * 获取表单中包含的文件
      * @author huanjiesm
      */
-    public function file($key=null){
-
+    public function file($key=''){
+        return empty($this->req->files[$key])?[]:$this->req->files[$key];
     }
     /**
      * 获取请求内容的二进制数据库
      * @author huanjiesm
      */
     public function raw(){
-
+        return $this->req->rawContent();
     }
     /**
      * 直接将表单中上传的数据保存到本地
@@ -90,28 +111,40 @@ class Request{
      * @author huanjiesm
      */
     public function ip(){
-
+        // clientIP := c.requestHeader("X-Forwarded-For")
+		// if index := strings.IndexByte(clientIP, ','); index >= 0 {
+		// 	clientIP = clientIP[0:index]
+		// }
+		// clientIP = strings.TrimSpace(clientIP)
+		// if clientIP != "" {
+		// 	return clientIP
+		// }
+		// clientIP = strings.TrimSpace(c.requestHeader("X-Real-Ip"))
+		// if clientIP != "" {
+		// 	return clientIP
+		// }
     }
     /**
      * 获取请求数据类型
      * @author huanjiesm
      */
     public function contentType(){
-
+        return $this->header(Header::CONTENTTYPE);
     }
     /**
      * 获取请求的Header值
      * @author huanjiesm
      */
-    public function header($key=null){
-
+    public function header($key=''){
+        $key = strtolower($key);// swoole要求所有key均为小写;
+        return empty($this->req->header['$key'])?'':$this->req->header['$key'];
     }
     /**
      * 获取请求包含的cookie值
      * @author huanjiesm
      */
-    public function cookie($name=null){
-
+    public function cookie($name=''){
+        return empty($this->req->cookie[$name])?'':$this->req->cookie[$name];
     }
 
 }
