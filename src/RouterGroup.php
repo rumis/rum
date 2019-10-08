@@ -15,6 +15,7 @@ class RouterGroup{
     public function __construct($path,&$rum){
         $this->basePath=$path;
         $this->app=$rum;
+        $this->handlers=[];
     }
 
     /**
@@ -37,7 +38,7 @@ class RouterGroup{
      */
     public function handle($method,$relativePath,$handle){
         $absolutePath  = Util::path_join($this->basePath,$relativePath);
-        $this->app->addRoute($method,$absolutePath,$handle);
+        $this->app->addRoute($method,$absolutePath,array_merge($this->handlers,[$handle]));
         return $this;
     }
     /**

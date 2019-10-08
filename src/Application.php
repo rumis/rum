@@ -2,6 +2,9 @@
 
 namespace Rum;
 
+require_once('BodyParser.php');
+
+
 /**
  * 
  * @author huanjiesm
@@ -18,6 +21,7 @@ class Application extends RouterGroup{
      * @author huanjiesm
      */
     public function __construct($opts){
+
         parent::__construct('/',$this);
 
         $this->handleMethodNotAllowed = !empty($opts['handleMethodNotAllowed'])?$opts['handleMethodNotAllowed']:false;
@@ -27,6 +31,9 @@ class Application extends RouterGroup{
         $this->noMethod = !empty($opts['noMethod'])?$opts['noMethod']:function(Request $req,Response $res){
             return $this->default405Method($req,$res);
         };
+
+        $this->use(BodyParser());   // 添加默认的第一个组件
+
     }
     /**
      * 启动
@@ -37,7 +44,6 @@ class Application extends RouterGroup{
         $this->httpServe->on('request', function ($request, $response) {
             $req = new Request($request);
             $res = new Response($response);
-
             // 处理http请求
             $this->handleHTTPRequest($req,$res);
         });
@@ -68,7 +74,7 @@ class Application extends RouterGroup{
      */
     public function group($path,...$middleware){
         $g = new RouterGroup($path,$this);
-        $g->use(...$middleware);
+        $g->use(...$this->handlers,...$middleware);
         return $g;
     }
 
@@ -90,8 +96,10 @@ class Application extends RouterGroup{
         // 路由存在
         if(!empty($root)){
             $handle = $root->getValue($path);
-            if(!empty($handle['handle'])){
-                $handle['handle']($req,$res);
+            if(!empty($handle['handles'])){
+                foreach($handle['handles'] as $fn){
+                    $fn($req,$res);
+                }
                 return;
             }
         }

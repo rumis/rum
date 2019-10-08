@@ -111,18 +111,19 @@ class Request{
      * @author huanjiesm
      */
     public function ip(){
-        // clientIP := c.requestHeader("X-Forwarded-For")
-		// if index := strings.IndexByte(clientIP, ','); index >= 0 {
-		// 	clientIP = clientIP[0:index]
-		// }
-		// clientIP = strings.TrimSpace(clientIP)
-		// if clientIP != "" {
-		// 	return clientIP
-		// }
-		// clientIP = strings.TrimSpace(c.requestHeader("X-Real-Ip"))
-		// if clientIP != "" {
-		// 	return clientIP
-		// }
+
+        $forwarded = $this->header('X-Forwarded-For');
+        if(!empty($forwarded)){
+            $arr = explode(',',$forwarded);
+            if(count($arr)>0){
+                return trim($arr[0]);
+            }
+        }
+        $realIP = $this->header('X-Real-Ip');
+        if(!empty($realIP)){
+            return trim($realIP);
+        }
+        return $this->req->server['remote_addr'];
     }
     /**
      * 获取请求数据类型
@@ -137,7 +138,7 @@ class Request{
      */
     public function header($key=''){
         $key = strtolower($key);// swoole要求所有key均为小写;
-        return empty($this->req->header['$key'])?'':$this->req->header['$key'];
+        return empty($this->req->header[$key])?'':$this->req->header[$key];
     }
     /**
      * 获取请求包含的cookie值

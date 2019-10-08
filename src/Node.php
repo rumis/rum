@@ -21,7 +21,7 @@ class Node{
     // 子节点
     public $children;
     // 处理方法
-    public $handle;
+    public $handles;
 
 
     /**
@@ -39,7 +39,7 @@ class Node{
      * 添加子节点
      * 调用此方法前，节点的path参数为空
      */
-    public function insertChild($path,$handle){
+    public function insertChild($path,$handles){
         $handleNode=$this;
         $handleNode->path = $path;
         for($i=0,$max=strlen($path);$i<$max;$i++){
@@ -79,7 +79,7 @@ class Node{
                     $child->path=substr($path,$i,$end-$i);
                     $nextChild= new Node();
                     $child->children = [$nextChild];
-                    $nextChild->insertChild(substr($path,$end),$handle);
+                    $nextChild->insertChild(substr($path,$end),$handles);
                     return;
                 }
                 $handleNode=$child;
@@ -114,17 +114,17 @@ class Node{
             
         } 
         // $handleNode->path=$path;
-        $handleNode->handle=$handle;
+        $handleNode->handles=$handles;
     }
 
 
     /**
      * 添加路由
      */
-    public function addRoute($path,$handle){
+    public function addRoute($path,$handles){
         if(strlen($this->path)==0&&count($this->children)==0){
             // 空树
-            $this->insertChild($path,$handle);
+            $this->insertChild($path,$handles);
             $this->nType=ROOT;
         }else{
             // 找到新路径和原路径的最小前缀
@@ -140,12 +140,12 @@ class Node{
                 $child->nType=NORMAL;
                 $child->indices = $this->indices;
                 $child->children=$this->children;
-                $child->handle = $this->handle;
+                $child->handles = $this->handles;
 
                 $this->children=[$child];
                 $this->indices= $this->path[$i];
                 $this->path = substr($path,0,$i);
-                $this->handle=null;
+                $this->handles=null;
                 $this->wildChild=false;
             }
             if ($i<strlen($path)){
@@ -158,7 +158,7 @@ class Node{
                     (strlen($firstChild->path)>=strlen($path)||
                     $path[strlen($firstChild->path)] == '/')){
                         // 符合参数节点
-                        $firstChild->addRoute($path,$handle);
+                        $firstChild->addRoute($path,$handles);
                         // continue walk;
                         return;
                     }else{
@@ -170,7 +170,7 @@ class Node{
                 $c = $path[0];
                 if($this->nType==PARAM&&$c=='/'&&count($this->children)==1){
                     $firstChild = $this->children[0];
-                    $firstChild->addRoute($path,$handle);
+                    $firstChild->addRoute($path,$handles);
                     // continue walk;
                     return;
                 }
@@ -178,7 +178,7 @@ class Node{
                 for($i=0;$i<strlen($this->indices);$i++){
                     if ($c == $this->indices[$i]){
                         $firstChild = $this->children[$i];
-                        $firstChild->addRoute($path,$handle);
+                        $firstChild->addRoute($path,$handles);
                         // continue walk;
                         return;
                     }
@@ -189,17 +189,17 @@ class Node{
                     $this->indices .= $c;
                     $otchild= new Node();
                     array_push($this->children,$otchild);
-                    $otchild->insertChild($path,$handle);
+                    $otchild->insertChild($path,$handles);
                     return;
                 }
-                $this->insertChild($path,$handle);
+                $this->insertChild($path,$handles);
                 return;
             }else if($i==strlen($path)){
-                if ($this->handle!=null){
+                if ($this->handles!=null){
                     echo '关联方法已存在';
                     die();
                 }
-                $this->handle=$handle;
+                $this->handles=$handles;
             }
             return;
         }
@@ -210,13 +210,13 @@ class Node{
      */
     public function getValue($path,$params=[]){
         if(strlen($path)<strlen($this->path)){
-            return ['handle'=>null,'params'=>$params];
+            return ['handles'=>null,'params'=>$params];
         }
         if($this->path==$path){
-            return ['handle'=>$this->handle,'params'=>$params];
+            return ['handles'=>$this->handles,'params'=>$params];
         }
         if(substr($path,0,strlen($this->path))!=$this->path){
-            return ['handle'=>null,'params'=>$params];    
+            return ['handles'=>null,'params'=>$params];    
         }
         $path  = substr($path,strlen($this->path));
         if(!$this->wildChild){
@@ -227,7 +227,7 @@ class Node{
                     return $this->children[$i]->getValue($path,$params);
                 }
             }
-            return ['handle'=>null,'params'=>$params]; 
+            return ['handles'=>null,'params'=>$params]; 
         }
         // 子节点包含参数
         $child = $this->children[0];
@@ -243,15 +243,15 @@ class Node{
                     $path=substr($path,$end);
                     return $child->children[0]->getValue($path,$params);
                 }
-                return ['handle'=>$child->handle,'params'=>$params]; 
+                return ['handles'=>$child->handles,'params'=>$params]; 
                 break;
             case CATCHALL:
                 $params[substr($child->path,1)]=$path;
-                return ['handle'=>$child->handle,'params'=>$params]; 
+                return ['handles'=>$child->handles,'params'=>$params]; 
                 break;
             default:
                 echo '不支持的参数节点类型';
-                return ['handle'=>null,'params'=>[]]; 
+                return ['handles'=>null,'params'=>[]]; 
         }
     }
 }
