@@ -51,6 +51,23 @@ class Application extends RouterGroup{
     }
 
     /**
+     * 启动
+     * 使用协程处理所有服务
+     * @author huanjiesm
+     */
+    public function runc($port=9501){
+        go(function () use($port) {
+            $this->httpServe = new \Co\Http\Server("0.0.0.0", $port, false);
+            $this->httpServe->handle('/', function ($request, $response) {
+                $req = new Request($request);
+                $res = new Response($response);
+                $this->handleHTTPRequest($req,$res);
+            });
+            $this->httpServe->start();
+        });
+    }
+
+    /**
      * 添加路由
      */
     public function addRoute($method,$path,$handle){
