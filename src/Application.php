@@ -44,9 +44,17 @@ class Application extends RouterGroup{
         $this->httpServe->on('request', function ($request, $response) {
             $req = new Request($request);
             $res = new Response($response);
+
+            // echo $this->httpServe->worker_id . PHP_EOL;
+            // echo posix_getpid() . PHP_EOL;
+
             // 处理http请求
             $this->handleHTTPRequest($req,$res);
         });
+        $this->httpServe->set(array(
+            'worker_num'=>4,
+            'dispatch_mode'=>1, 
+        ));
         $this->httpServe->start();
     }
 
