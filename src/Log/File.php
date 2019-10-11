@@ -1,16 +1,27 @@
 <?php
 
-namespace Rum;
+namespace Rum\Log;
+
+use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerTrait;
 
 /**
  * 
  */
-class File implements ILog{
+class File implements LoggerInterface
+{
+    use LoggerTrait;
 
-    static function init():ILog{        
+    static function init($logPath)
+    {
+        return new Console();
     }
 
-    function log(){
-
+    /**
+     * 记录
+     */
+    public function log($level, $message, array $context = array())
+    {
+        echo 'Log.' . $level . ':' . Util::interpolate($message, $context) . PHP_EOL;
     }
 }
