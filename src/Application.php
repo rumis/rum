@@ -44,8 +44,10 @@ class Application extends RouterGroup{
         $this->httpServe->on('request', function ($request, $response) {
             $req = new Request($request);
             $res = new Response($response);
-            // 处理http请求
-            $this->handleHTTPRequest($req,$res);
+            go(function()use($req,$res){
+                // 处理http请求
+                $this->handleHTTPRequest($req,$res);
+            });
         });
         $this->httpServe->start();
     }
