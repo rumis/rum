@@ -58,7 +58,9 @@ class Application extends RouterGroup
             });
         });
 
-        Logger::info('server start on 0.0.0.0:{port}', ['port' => $port]);
+        go(function () use ($port) {
+            Logger::info('server start on 0.0.0.0:{port}', ['port' => $port]);
+        });
 
         $this->httpServe->start();
     }
