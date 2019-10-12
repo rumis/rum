@@ -7,7 +7,9 @@ use Psr\Log\LoggerTrait;
 use Swoole\Coroutine\Channel;
 
 /**
- * 
+ * 本地文件日志
+ * 日志内容通过Channel发送，专属日志记录协程dump
+ * 此对象的初始化一定要放在Server EventLoop创建之后
  */
 class File implements LoggerInterface
 {
@@ -29,7 +31,7 @@ class File implements LoggerInterface
         }
         if (!file_exists($logPath)) {
             try {
-                mkdir($logPath, '0777', true);
+                mkdir($logPath, 0777, true);
             } catch (\Throwable $th) {
                 echo $th->getMessage();
                 exit();

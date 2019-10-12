@@ -46,7 +46,7 @@ class Application extends RouterGroup
      * 启动
      * @author huanjiesm
      */
-    public function run($port = 9501)
+    public function run($port = 9501, $started = null)
     {
         $this->httpServe = new \Swoole\Http\Server("0.0.0.0", $port, SWOOLE_BASE);
         $this->httpServe->on('request', function ($request, $response) {
@@ -57,10 +57,14 @@ class Application extends RouterGroup
                 $this->handleHTTPRequest($req, $res);
             });
         });
-
-        go(function () use ($port) {
-            Logger::info('server start on 0.0.0.0:{port}', ['port' => $port]);
-        });
+        if (!empty($started)) {
+            $this->httpServe->on('start', function () use ($started, $port) {
+                $started();
+                go(function () use ($port) {
+                    Logger::info('server start on 0.0.0.0:{port}', ['port' => $port]);
+                });
+            });
+        }
 
         $this->httpServe->start();
     }
@@ -70,15 +74,23 @@ class Application extends RouterGroup
      * 使用协程处理所有服务
      * @author huanjiesm
      */
-    public function runc($port = 9501)
+    public function runc($port = 9501, $started = null)
     {
-        go(function () use ($port) {
+        go(function () use ($port, $started) {
             $this->httpServe = new \Co\Http\Server("0.0.0.0", $port, false);
             $this->httpServe->handle('/', function ($request, $response) {
                 $req = new Request($request);
                 $res = new Response($response);
                 $this->handleHTTPRequest($req, $res);
             });
+
+            if (!empty($started)) {
+                $this->httpServe->on('start', function () use ($started, $port) {
+                    $started();
+                    Logger::info('server start on 0.0.0.0:{port}', ['port' => $port]);
+                });
+            }
+
             $this->httpServe->start();
         });
     }
