@@ -9,13 +9,19 @@
             "email": "huanjiesm@163.com"
         }
     ],
+    "repositories": {
+        "packagist": {
+            "type": "composer",
+            "url": "https://packagist.phpcomposer.com"
+        }
+    },
     "require": {
-        "php":">=7.3.0",
+        "php": ">=7.3.0",
         "psr/log": "1.1.0"
     },
     "autoload": {
         "psr-4": {
-            "Rum\\":"./src"
+            "Rum\\": "./src"
         }
     }
 }
