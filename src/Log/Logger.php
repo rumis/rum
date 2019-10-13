@@ -171,6 +171,17 @@ class Logger
         self::$logger->log($message, $context);
     }
 
+
+    /**
+     * fatal
+     * log message and then app exit;
+     */
+    public static function fatal($msg)
+    {
+        self::error($msg);
+        exit();
+    }
+
     /**
      * 日志中间件
      */

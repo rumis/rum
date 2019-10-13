@@ -2,13 +2,16 @@
 
 namespace Rum;
 
+use Rum\Log\Logger;
+
 const NORMAL = 1; // 普通节点
 const ROOT = 2; // 根节点
 const PARAM = 4;    // 参数节点
 const CATCHALL = 8; // 大参数节点
 
 
-class Node{
+class Node
+{
 
     // 此节点上的URL路径
     public $path;
@@ -27,179 +30,174 @@ class Node{
     /**
      * 构造函数
      */
-    public function __construct(){
-        $this->path='';
-        $this->wildChild=false;
-        $this->nType=NORMAL;
-        $this->indices='';
-        $this->children=[];
+    public function __construct()
+    {
+        $this->path = '';
+        $this->wildChild = false;
+        $this->nType = NORMAL;
+        $this->indices = '';
+        $this->children = [];
     }
 
     /**
      * 添加子节点
      * 调用此方法前，节点的path参数为空
      */
-    public function insertChild($path,$handles){
-        $handleNode=$this;
+    public function insertChild($path, $handles)
+    {
+        $handleNode = $this;
         $handleNode->path = $path;
-        for($i=0,$max=strlen($path);$i<$max;$i++){
+        for ($i = 0, $max = strlen($path); $i < $max; $i++) {
             $c = $path[$i];
             // 检测是否包含参数
-            if($c!= ':' && $c !='*'){
+            if ($c != ':' && $c != '*') {
                 continue;
             }
-            $end = $i+1;
-            while($end<$max && $path[$end]!='/'){
-                switch($path[$end]){
+            $end = $i + 1;
+            while ($end < $max && $path[$end] != '/') {
+                switch ($path[$end]) {
                     case ':':
                     case '*':
-                        echo '一段路径中只能包含一个参数项';
-                        die();
+                        Logger::fatal('一段路径中只能包含一个参数项');
                     default:
-                    $end++;
+                        $end++;
                 }
             }
-            if(count($this->children)>0){
-                echo '参数节点不可包含其他子节点';
-                die();
+            if (count($this->children) > 0) {
+                Logger::fatal('参数节点不可包含其他子节点');
             }
-            if($end-$i<2){
-                echo '必须存在参数名称';
-                die();
+            if ($end - $i < 2) {
+                Logger::fatal('必须存在参数名称');
             }
-            if ($c==':'){
-                $this->path= substr($path,0,$i);
-                $this->wildChild=true;
+            if ($c == ':') {
+                $this->path = substr($path, 0, $i);
+                $this->wildChild = true;
 
                 $child = new Node();
-                $child->nType=PARAM;
-                $child->path=substr($path,$i);
-                $this->children=[$child];
-                if($end<$max){
-                    $child->path=substr($path,$i,$end-$i);
-                    $nextChild= new Node();
+                $child->nType = PARAM;
+                $child->path = substr($path, $i);
+                $this->children = [$child];
+                if ($end < $max) {
+                    $child->path = substr($path, $i, $end - $i);
+                    $nextChild = new Node();
                     $child->children = [$nextChild];
-                    $nextChild->insertChild(substr($path,$end),$handles);
+                    $nextChild->insertChild(substr($path, $end), $handles);
                     return;
                 }
-                $handleNode=$child;
-                break;                
-            }else {
-                if($end!=$max){
-                    echo '*参数只能出现在路由的最后一段';
-                    die();
+                $handleNode = $child;
+                break;
+            } else {
+                if ($end != $max) {
+                    Logger::fatal('*参数只能出现在路由的最后一段');
                 }
-                if(strlen($this->path)>0&&substr($this->path,strlen($this->path)-1)=='/'){
-                    echo '和根节点冲突';
-                    die();
+                if (strlen($this->path) > 0 && substr($this->path, strlen($this->path) - 1) == '/') {
+                    Logger::fatal('和根节点冲突');
                 }
                 // $i--;
-                if($path[$i-1]!='/'){
-                    echo '*参数前必须为/';
-                    die();
+                if ($path[$i - 1] != '/') {
+                    Logger::fatal('*参数前必须为/');
                 }
                 // 当前节点路径
-                $this->path= substr($path,0,$i);
+                $this->path = substr($path, 0, $i);
                 $this->indices = $path[$i];
-                $this->wildChild=true;
+                $this->wildChild = true;
 
                 $schild = new Node();
-                $schild->nType=CATCHALL;
-                $schild->path=substr($path,$i);
-                $this->children=[$schild];
+                $schild->nType = CATCHALL;
+                $schild->path = substr($path, $i);
+                $this->children = [$schild];
 
-                $handleNode=$schild;
+                $handleNode = $schild;
                 break;
             }
-            
-        } 
+        }
         // $handleNode->path=$path;
-        $handleNode->handles=$handles;
+        $handleNode->handles = $handles;
     }
 
 
     /**
      * 添加路由
      */
-    public function addRoute($path,$handles){
-        if(strlen($this->path)==0&&count($this->children)==0){
+    public function addRoute($path, $handles)
+    {
+        if (strlen($this->path) == 0 && count($this->children) == 0) {
             // 空树
-            $this->insertChild($path,$handles);
-            $this->nType=ROOT;
-        }else{
+            $this->insertChild($path, $handles);
+            $this->nType = ROOT;
+        } else {
             // 找到新路径和原路径的最小前缀
-            $i=0;
-            $max = min(strlen($path),strlen($this->path));
-            while($i<$max && $path[$i]==$this->path[$i]){
+            $i = 0;
+            $max = min(strlen($path), strlen($this->path));
+            while ($i < $max && $path[$i] == $this->path[$i]) {
                 $i++;
             }
-            if($i<strlen($this->path)){
+            if ($i < strlen($this->path)) {
                 $child = new Node();
-                $child->path=substr($this->path,$i);
+                $child->path = substr($this->path, $i);
                 $child->wildChild = $this->wildChild;
-                $child->nType=NORMAL;
+                $child->nType = NORMAL;
                 $child->indices = $this->indices;
-                $child->children=$this->children;
+                $child->children = $this->children;
                 $child->handles = $this->handles;
 
-                $this->children=[$child];
-                $this->indices= $this->path[$i];
-                $this->path = substr($path,0,$i);
-                $this->handles=null;
-                $this->wildChild=false;
+                $this->children = [$child];
+                $this->indices = $this->path[$i];
+                $this->path = substr($path, 0, $i);
+                $this->handles = null;
+                $this->wildChild = false;
             }
-            if ($i<strlen($path)){
-                $path = substr($path,$i);
-                if($this->wildChild){
-                    $firstChild=$this->children[0];
+            if ($i < strlen($path)) {
+                $path = substr($path, $i);
+                if ($this->wildChild) {
+                    $firstChild = $this->children[0];
                     // 检测是否符合参数节点
-                    if(strlen($path)>=strlen($firstChild->path)&&
-                    $firstChild->path==substr($path,0,strlen($firstChild->path))&&
-                    (strlen($firstChild->path)>=strlen($path)||
-                    $path[strlen($firstChild->path)] == '/')){
+                    if (
+                        strlen($path) >= strlen($firstChild->path) &&
+                        $firstChild->path == substr($path, 0, strlen($firstChild->path)) && (strlen($firstChild->path) >= strlen($path) ||
+                            $path[strlen($firstChild->path)] == '/')
+                    ) {
                         // 符合参数节点
-                        $firstChild->addRoute($path,$handles);
+                        $firstChild->addRoute($path, $handles);
                         // continue walk;
                         return;
-                    }else{
+                    } else {
                         // 参数冲突
-                        echo '冲突';
-                        die();
+                        Logger::fatal('参数冲突');
                     }
                 }
                 $c = $path[0];
-                if($this->nType==PARAM&&$c=='/'&&count($this->children)==1){
+                if ($this->nType == PARAM && $c == '/' && count($this->children) == 1) {
                     $firstChild = $this->children[0];
-                    $firstChild->addRoute($path,$handles);
+                    $firstChild->addRoute($path, $handles);
                     // continue walk;
                     return;
                 }
-                
-                for($i=0;$i<strlen($this->indices);$i++){
-                    if ($c == $this->indices[$i]){
+
+                for ($i = 0; $i < strlen($this->indices); $i++) {
+                    if ($c == $this->indices[$i]) {
                         $firstChild = $this->children[$i];
-                        $firstChild->addRoute($path,$handles);
+                        $firstChild->addRoute($path, $handles);
                         // continue walk;
                         return;
                     }
                 }
 
                 // 其他情况
-                if($c!=':'&&$c!='*'){
+                if ($c != ':' && $c != '*') {
                     $this->indices .= $c;
-                    $otchild= new Node();
-                    array_push($this->children,$otchild);
-                    $otchild->insertChild($path,$handles);
+                    $otchild = new Node();
+                    array_push($this->children, $otchild);
+                    $otchild->insertChild($path, $handles);
                     return;
                 }
-                $this->insertChild($path,$handles);
+                $this->insertChild($path, $handles);
                 return;
-            }else if($i==strlen($path)){
-                if ($this->handles!=null){
-                    echo '关联方法已存在';
-                    die();
+            } else if ($i == strlen($path)) {
+                if ($this->handles != null) {
+                    Logger::fatal('关联方法已存在');
                 }
-                $this->handles=$handles;
+                $this->handles = $handles;
             }
             return;
         }
@@ -208,50 +206,51 @@ class Node{
     /**
      * 获取Handle
      */
-    public function getValue($path,$params=[]){
-        if(strlen($path)<strlen($this->path)){
-            return ['handles'=>null,'params'=>$params];
+    public function getValue($path, $params = [])
+    {
+        if (strlen($path) < strlen($this->path)) {
+            return ['handles' => null, 'params' => $params];
         }
-        if($this->path==$path){
-            return ['handles'=>$this->handles,'params'=>$params];
+        if ($this->path == $path) {
+            return ['handles' => $this->handles, 'params' => $params];
         }
-        if(substr($path,0,strlen($this->path))!=$this->path){
-            return ['handles'=>null,'params'=>$params];    
+        if (substr($path, 0, strlen($this->path)) != $this->path) {
+            return ['handles' => null, 'params' => $params];
         }
-        $path  = substr($path,strlen($this->path));
-        if(!$this->wildChild){
+        $path  = substr($path, strlen($this->path));
+        if (!$this->wildChild) {
             // 子节点不包含参数节点
-            $c=$path[0];
-            for($i=0;$i<strlen($this->indices);$i++){
-                if($c==$this->indices[$i]){
-                    return $this->children[$i]->getValue($path,$params);
+            $c = $path[0];
+            for ($i = 0; $i < strlen($this->indices); $i++) {
+                if ($c == $this->indices[$i]) {
+                    return $this->children[$i]->getValue($path, $params);
                 }
             }
-            return ['handles'=>null,'params'=>$params]; 
+            return ['handles' => null, 'params' => $params];
         }
         // 子节点包含参数
         $child = $this->children[0];
-        switch($child->nType){
+        switch ($child->nType) {
             case PARAM:
-                $end=0;
-                while($end<strlen($path)&&$path[$end]!='/'){
+                $end = 0;
+                while ($end < strlen($path) && $path[$end] != '/') {
                     $end++;
                 }
-                $params[substr($child->path,1)]=substr($path,0,$end);
-                if($end<strlen($path)&&count($child->children)>0){
+                $params[substr($child->path, 1)] = substr($path, 0, $end);
+                if ($end < strlen($path) && count($child->children) > 0) {
                     // 继续遍历子节点
-                    $path=substr($path,$end);
-                    return $child->children[0]->getValue($path,$params);
+                    $path = substr($path, $end);
+                    return $child->children[0]->getValue($path, $params);
                 }
-                return ['handles'=>$child->handles,'params'=>$params]; 
+                return ['handles' => $child->handles, 'params' => $params];
                 break;
             case CATCHALL:
-                $params[substr($child->path,1)]=$path;
-                return ['handles'=>$child->handles,'params'=>$params]; 
+                $params[substr($child->path, 1)] = $path;
+                return ['handles' => $child->handles, 'params' => $params];
                 break;
             default:
-                echo '不支持的参数节点类型';
-                return ['handles'=>null,'params'=>[]]; 
+                Logger::error('不支持的参数节点类型');
+                return ['handles' => null, 'params' => []];
         }
     }
 }

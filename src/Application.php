@@ -100,11 +100,11 @@ class Application extends RouterGroup
     public function addRoute($method, $path, $handle)
     {
         if (!in_array($method, Method::S)) {
-            echo '不支持的请求方法';
+            Logger::fatal('不支持的请求方法');
             return;
         }
         if ($path[0] != '/') {
-            echo '路由路径必须以/开头';
+            Logger::fatal('路由路径必须以/开头');
             return;
         }
         if (empty($this->trees[$method])) {
