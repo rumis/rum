@@ -8,7 +8,7 @@ use Swoole\Coroutine\Channel;
 
 /**
  * 本地文件日志
- * 日志内容通过Channel发送，专属日志记录协程dump
+ * 日志内容通过Channel发送，日志记录协程dump
  * 此对象的初始化一定要放在Server EventLoop创建之后
  */
 class File implements LoggerInterface
@@ -18,15 +18,20 @@ class File implements LoggerInterface
     var $logPath;
     var $chan;
 
+    /**
+     * 初始化，职责类似构造
+     */
     static function init($logPath)
     {
         return new File($logPath);
     }
-
+    /**
+     * 本地文件日志
+     */
     public function __construct($logPath)
     {
         if (file_exists($logPath) && !is_dir($logPath)) {
-            echo "日志目录：{$logPath} 必需为一个文件夹！";
+            echo "log path：{$logPath} must be a directory！";
             exit();
         }
         if (!file_exists($logPath)) {
@@ -48,7 +53,7 @@ class File implements LoggerInterface
     }
 
     /**
-     * 记录
+     * log
      */
     public function log($level, $message, array $context = array())
     {

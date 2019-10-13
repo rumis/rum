@@ -5,11 +5,11 @@ namespace Rum\Log;
 use Psr\Log\LoggerInterface;
 
 /**
- * 
+ * Logger
  */
 class Logger
 {
-    static $logger;
+    static $logger = null;
 
     /**
      * Sets a logger instance on the object.
@@ -31,6 +31,9 @@ class Logger
      */
     public static function emergency($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->emergency($message, $context);
     }
 
@@ -46,6 +49,9 @@ class Logger
      */
     public static function alert($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->alert($message, $context);
     }
 
@@ -60,6 +66,9 @@ class Logger
      */
     public static function critical($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->critical($message, $context);
     }
 
@@ -73,6 +82,9 @@ class Logger
      */
     public static function error($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->error($message, $context);
     }
 
@@ -88,6 +100,9 @@ class Logger
      */
     public static function warning($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->warning($message, $context);
     }
 
@@ -100,6 +115,9 @@ class Logger
      */
     public static function notice($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->notice($message, $context);
     }
 
@@ -114,6 +132,9 @@ class Logger
      */
     public static function info($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->info($message, $context);
     }
 
@@ -126,6 +147,9 @@ class Logger
      */
     public static function debug($message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->debug($message, $context);
     }
 
@@ -139,6 +163,9 @@ class Logger
      */
     public static function log($level, $message, array $context = array())
     {
+        if (empty(self::$logger)) {
+            return;
+        }
         self::$logger->log($message, $context);
     }
 }
