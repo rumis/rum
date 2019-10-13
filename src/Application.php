@@ -125,7 +125,6 @@ class Application extends RouterGroup
 
     /**
      * 静态路径
-     * @author huanjiesm
      */
     public function static($relativePath, $root)
     { }
@@ -141,6 +140,7 @@ class Application extends RouterGroup
         if (!empty($this->trees[$method])) {
             $handle = $this->trees[$method]->getValue($path);
             if (!empty($handle['handles'])) {
+                $req->setParams($handle['params']); // 记录URL中的参数
                 foreach ($handle['handles'] as $fn) {
                     $fn($req, $res);
                 }

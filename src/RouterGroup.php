@@ -4,8 +4,7 @@ namespace Rum;
 
 /**
  * 路由组
- * @author rum
- * @Date 00点22分
+ * @Date 2019年10月13日20点42分
  */
 class RouterGroup{
 
@@ -20,7 +19,6 @@ class RouterGroup{
 
     /**
      * 获取路由组的根路径
-     * @author huanjiesm
      */
     public function basePath(){
         return $this->basePath;
