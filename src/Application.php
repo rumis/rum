@@ -9,8 +9,7 @@ require_once('BodyParser.php');
 
 
 /**
- * 
- * @author huanjiesm
+ * Rum Application 
  */
 class Application extends RouterGroup
 {
@@ -22,17 +21,18 @@ class Application extends RouterGroup
 
     /**
      * 构造方法
-     * @author huanjiesm
      */
     public function __construct($opts)
     {
 
         parent::__construct('/', $this);
 
+        // 404
         $this->handleMethodNotAllowed = !empty($opts['handleMethodNotAllowed']) ? $opts['handleMethodNotAllowed'] : false;
         $this->noRoute = !empty($opts['noRoute']) ? $opts['noRoute'] : function (Request $req, Response $res) {
             return $this->default404Method($req, $res);
         };
+        // 405
         $this->noMethod = !empty($opts['noMethod']) ? $opts['noMethod'] : function (Request $req, Response $res) {
             return $this->default405Method($req, $res);
         };
@@ -45,7 +45,6 @@ class Application extends RouterGroup
     }
     /**
      * 启动
-     * @author huanjiesm
      */
     public function run($port = 9501, $started = null)
     {
@@ -71,9 +70,8 @@ class Application extends RouterGroup
     }
 
     /**
-     * 启动
-     * 使用协程处理所有服务
-     * @author huanjiesm
+     * 启动2
+     * 另一种协程启动方式
      */
     public function runc($port = 9501, $started = null)
     {
@@ -117,7 +115,6 @@ class Application extends RouterGroup
 
     /**
      * 创建新的路由组
-     * @author liumurong
      */
     public function group($path, ...$middleware)
     {
@@ -140,10 +137,9 @@ class Application extends RouterGroup
     {
         $method = $req->method();
         $path = $req->path();
-        $root = $this->trees[$method];
         // 路由存在
-        if (!empty($root)) {
-            $handle = $root->getValue($path);
+        if (!empty($this->trees[$method])) {
+            $handle = $this->trees[$method]->getValue($path);
             if (!empty($handle['handles'])) {
                 foreach ($handle['handles'] as $fn) {
                     $fn($req, $res);
@@ -155,8 +151,8 @@ class Application extends RouterGroup
         if ($this->handleMethodNotAllowed) {
             foreach ($this->trees as $m => $tree) {
                 if ($m != $method) {
-                    $handle = $root->getValue($path);
-                    if (!empty($handle)) {
+                    $handle = $tree->getValue($path);
+                    if (!empty($handle) && !empty($handle['handles'])) {
                         $noMethod = $this->noMethod;
                         $noMethod($req, $res);
                         return;
@@ -189,15 +185,15 @@ class Application extends RouterGroup
      */
     private function default404Method(Request $req, Response $res)
     {
-        // code:405, content-type= MIME::PLAIN, body: '405 method not allowed'
-        echo '404';
+        $res->header('Content-type', Mime::PLAIN);
+        $res->end('404 Not Found');
     }
     /**
      * 默认的405方法
      */
     private function default405Method(Request $req, Response $res)
     {
-        // code:405, content-type= MIME::PLAIN, body: '405 method not allowed'
-        echo '405';
+        $res->header('Content-type', Mime::PLAIN);
+        $res->end('405 Method Not Allowed');
     }
 }
