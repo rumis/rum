@@ -3,6 +3,8 @@
 namespace Rum\Log;
 
 use Psr\Log\LoggerInterface;
+use Rum\Request;
+use Rum\Response;
 
 /**
  * Logger
@@ -167,5 +169,19 @@ class Logger
             return;
         }
         self::$logger->log($message, $context);
+    }
+
+    /**
+     * 日志中间件
+     */
+    public static function middle()
+    {
+        return function (Request $req, Response $res) {
+            $msg = 'rum.{time}.{path}';
+            Logger::info($msg, array(
+                'time' => date('Y-m-d:H-i-s'),
+                'path' => $req->path(),
+            ));
+        };
     }
 }

@@ -40,6 +40,7 @@ class Application extends RouterGroup
         Logger::setLogger(Console::init());  // 默认初始化控制台日志器
 
         $this->use(BodyParser());   // 添加默认的第一个组件
+        $this->use(Logger::middle()); // 简单的日志组件
 
     }
     /**
