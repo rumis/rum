@@ -2,13 +2,11 @@
 
 namespace Rum\Annotation;
 
-
 /**
- * 定义Router注解
+ * 路由
  * @Annotation
- * @Target({'METHOD'})
  */
-class Router
+final class Router
 {
     /**
      * URL访问路径

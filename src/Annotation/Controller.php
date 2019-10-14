@@ -3,10 +3,19 @@
 namespace Rum\Annotation;
 
 /**
- * 定义Controller注解
- * 
+ * 控制器
  * @Annotation
- * @Target({'CLASS'})
  */
-final class Controller
-{ }
+class Controller
+{
+    /**
+     * only one unnamed param
+     * @var string
+     */
+    protected $defaultFieldName = 'prefix';
+    /**
+     * @Required()
+     * @var string
+     */
+    public $prefix;
+}
