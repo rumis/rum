@@ -85,12 +85,17 @@ class RouterParser
         $routers = [];
         $annotationReader = new AnnotationReader();
         $reflectionClass = new \ReflectionClass($className);
-        $controllerAnnotation = $annotationReader->getClassAnnotation($reflectionClass, 'Controller');
+        // var_dump($className);
+        $controllerAnnotations = $annotationReader->getClassAnnotations($reflectionClass);
+        $controllerAnnotation = $annotationReader->getClassAnnotation($reflectionClass, 'Rum\Annotation\Controller');
+        // var_dump($controllerAnnotations);
+        // var_dump($controllerAnnotation);
         if (empty($controllerAnnotation)) {
             return $routers;
         }
         // var_dump($controllerAnnotation);
         $methods = $reflectionClass->getMethods();
+        var_dump($methods);
         if (empty($methods)) {
             return $routers;
         }
