@@ -53,10 +53,6 @@ class Application extends RouterGroup
             $routers = $p->handle();
             foreach ($routers as $router) {
                 $this->addroute($router['methods'], $router['path'], $router['handle']);
-                Logger::info('已加载路由:{router},支持的方法:{method}', [
-                    'router' => $router['path'],
-                    'method' => $router['methods'],
-                ]);
             }
         }
 
@@ -133,6 +129,10 @@ class Application extends RouterGroup
             $this->trees[$method] = new Node();
         }
         $this->trees[$method]->addRoute($path, $handles);
+        Logger::info('{method}.{router}', [
+            'router' => $path,
+            'method' => $method,
+        ]);
     }
 
     /**

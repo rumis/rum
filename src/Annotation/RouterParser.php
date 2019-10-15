@@ -47,13 +47,13 @@ class RouterParser
      */
     public function handle()
     {
-        return $this->handleDirectory($this->controllerBasePath);
+        return $this->handleDirectory($this->controllerBasePath, $this->baseNamespace);
     }
 
     /**
      * 处理目录下内容
      */
-    public function handleDirectory($path)
+    public function handleDirectory($path, $workspace)
     {
         if (!is_dir($path)) {
             return;
@@ -71,10 +71,10 @@ class RouterParser
             }
             $absulatePath = $path . '/' . $file;
             if (is_dir($absulatePath)) {
-                array_push($routers, ...$this->handleDirectory($absulatePath));
+                array_push($routers, ...$this->handleDirectory($absulatePath, $workspace . '\\' . $file));
                 continue;
             }
-            array_push($routers, ...$this->handleFile($absulatePath));
+            array_push($routers, ...$this->handleFile($absulatePath, $workspace));
         }
         return $routers;
     }
@@ -82,13 +82,13 @@ class RouterParser
     /**
      *  解析Controller文件，读取所有routers
      */
-    public function handleFile($path)
+    public function handleFile($path, $workspace)
     {
         $info = pathinfo($path);
         if ($info['extension'] !== 'php') {
             return [];
         }
-        $className = $this->baseNamespace . '\\' . $info['filename'];
+        $className = $workspace . '\\' . $info['filename'];
         // echo $className . PHP_EOL;
         if (!class_exists($className)) {
             return [];
