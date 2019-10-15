@@ -53,7 +53,7 @@ class RouterParser
     /**
      * 处理目录下内容
      */
-    public function handleDirectory($path, $workspace)
+    public function handleDirectory($path, $workspace, $groupName = '')
     {
         if (!is_dir($path)) {
             return;
@@ -63,7 +63,11 @@ class RouterParser
             Logger::error('can not open controller directory {path}', ['path' => $dir]);
             return [];
         }
-        $routers = [];
+        $group = array(
+            'groups' => [],
+            'routers' => [],
+            'prefix' => $groupName,
+        );
         while (($file = readdir($dir)) !== false) {
             if ($file[0] == '.' || $file == 'vendor') {
                 // 隐藏、vendor目录忽略
@@ -71,12 +75,12 @@ class RouterParser
             }
             $absulatePath = $path . '/' . $file;
             if (is_dir($absulatePath)) {
-                array_push($routers, ...$this->handleDirectory($absulatePath, $workspace . '\\' . $file));
+                array_push($group['groups'], $this->handleDirectory($absulatePath, $workspace . '\\' . $file, $file));
                 continue;
             }
-            array_push($routers, ...$this->handleFile($absulatePath, $workspace));
+            array_push($group['groups'], $this->handleFile($absulatePath, $workspace));
         }
-        return $routers;
+        return $group;
     }
 
     /**
@@ -93,33 +97,51 @@ class RouterParser
         if (!class_exists($className)) {
             return [];
         }
-        $routers = [];
+        // var_dump($className);
+        $group = array(
+            'groups' => [],
+            'routers' => [],
+            'middlewares' => [],
+            'prefix' => $info['filename'],
+        );
         $annotationReader = new AnnotationReader();
         $reflectionClass = new \ReflectionClass($className);
         $controllerAnnotation = $annotationReader->getClassAnnotation($reflectionClass, 'Rum\Annotation\Controller');
         if (empty($controllerAnnotation)) {
-            return $routers;
+            return $group;
         }
         $methods = $reflectionClass->getMethods();
         if (empty($methods)) {
-            return $routers;
+            return $group;
         }
         // var_dump($methods);
         $cont = new $className();
-        foreach ($methods as $mehtod) {
-            $routerAnnotation = $annotationReader->getMethodAnnotation($mehtod, 'Rum\Annotation\Router');
-            if (empty($routerAnnotation)) {
-                continue;
-            }
-            $handleName = $mehtod->name;
-            $routers[] = [
-                'path' => $controllerAnnotation->prefix . $routerAnnotation->path,
-                'methods' => $routerAnnotation->method,
-                'handle' => function (Request $req, Response $res) use ($cont, $handleName) {
-                    $cont->$handleName($req, $res);
+        foreach ($methods as $method) {
+            // $routerAnnotation = $annotationReader->getMethodAnnotation($mehtod, 'Rum\Annotation\Router');
+            $routerAnnotations = $annotationReader->getMethodAnnotations($method);
+            foreach ($routerAnnotations as $anno) {
+                $handleName = $method->name;
+                // var_dump($anno);
+                switch (get_class($anno)) {
+                    case 'Rum\Annotation\Router':
+                        $group['routers'][] = [
+                            'path' => ($anno->path)[0] == '/' ? substr($anno->path, 1) : $anno->path,
+                            'methods' => $anno->method,
+                            'handle' => function (Request $req, Response $res) use ($cont, $handleName) {
+                                $cont->$handleName($req, $res);
+                            }
+                        ];
+                        break;
+                    case 'Rum\Annotation\Middleware':
+                        $group['middlewares'][] = function (Request $req, Response $res) use ($cont, $handleName) {
+                            $cont->$handleName($req, $res);
+                        };
+                        break;
+                    default:
+                        break;
                 }
-            ];
+            }
         }
-        return $routers;
+        return $group;
     }
 }
