@@ -2,6 +2,7 @@
 
 namespace Rum;
 
+use Rum\Annotation\RouterParser;
 use Rum\Log\Console;
 use Rum\Log\Logger;
 
@@ -24,8 +25,9 @@ class Application extends RouterGroup
      */
     public function __construct($opts)
     {
-
         parent::__construct('/', $this);
+        // 默认初始化控制台日志器
+        Logger::setLogger(Console::init());  // 
 
         // 404
         $this->handleMethodNotAllowed = !empty($opts['handleMethodNotAllowed']) ? $opts['handleMethodNotAllowed'] : false;
@@ -37,11 +39,31 @@ class Application extends RouterGroup
             return $this->default405Method($req, $res);
         };
 
-        Logger::setLogger(Console::init());  // 默认初始化控制台日志器
+        // 注解
+        if (!empty($opts['enableControllerAnnotation'])) {
+            if (empty($opts['baseNamespace'])) {
+                Logger::fatal('启用路由解析时必须指定控制器根命名空间');
+                return;
+            }
+            if (empty($opts['baseControllerPath'])) {
+                Logger::fatal('启用路由解析时必须指定控制器根路径');
+                return;
+            }
+            $p = new RouterParser($opts['baseNamespace'], $opts['baseControllerPath'], $opts['ignoreAnnotations']);
+            $routers = $p->handle();
+            foreach ($routers as $router) {
+                $this->addroute($router['methods'], $router['path'], $router['handle']);
+                Logger::info('已加载路由:{router},支持的方法:{method}', [
+                    'router' => $router['path'],
+                    'method' => $router['methods'],
+                ]);
+            }
+        }
 
-        $this->use(BodyParser());   // 添加默认的第一个组件
-        $this->use(Logger::middle()); // 简单的日志组件
-
+        // 添加默认的第一个组件
+        $this->use(BodyParser());
+        // 简单的日志组件
+        $this->use(Logger::middle());
     }
     /**
      * 启动
@@ -97,7 +119,7 @@ class Application extends RouterGroup
     /**
      * 添加路由
      */
-    public function addRoute($method, $path, $handle)
+    public function addRoute($method, $path, ...$handles)
     {
         if (!in_array($method, Method::S)) {
             Logger::fatal('不支持的请求方法');
@@ -110,7 +132,7 @@ class Application extends RouterGroup
         if (empty($this->trees[$method])) {
             $this->trees[$method] = new Node();
         }
-        $this->trees[$method]->addRoute($path, $handle);
+        $this->trees[$method]->addRoute($path, $handles);
     }
 
     /**

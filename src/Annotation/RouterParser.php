@@ -5,26 +5,38 @@ namespace Rum\Annotation;
 
 use Rum\Log\Logger;
 use Doctrine\Common\Annotations\AnnotationReader;
-use Doctrine\Common\Annotations\FileCacheReader;
 use Doctrine\Common\Annotations\AnnotationRegistry;
+use Rum\Request;
+use Rum\Response;
 
 /**
  * 注解解析
  */
 class RouterParser
 {
+    /**
+     * 根命名空间
+     */
     private $baseNamespace;
+    /**
+     * 控制器根目录
+     */
     private $controllerBasePath;
 
     /**
      * 构造
      */
-    public function __construct($baseNamespace, $controllerBasePath)
+    public function __construct($baseNamespace, $controllerBasePath, $ignoreAnnotations = [])
     {
         // 注册类加载器
         AnnotationRegistry::registerLoader(function ($class) {
             return class_exists($class) || interface_exists($class);
         });
+
+        // 添加需要忽略的注解
+        foreach ($ignoreAnnotations as $ignoreClassName) {
+            AnnotationReader::addGlobalIgnoredName($ignoreClassName);
+        }
 
         $this->baseNamespace = $baseNamespace;
         $this->controllerBasePath = $controllerBasePath;
@@ -68,11 +80,10 @@ class RouterParser
     }
 
     /**
-     * 
+     *  解析Controller文件，读取所有routers
      */
     public function handleFile($path)
     {
-        // echo $path . PHP_EOL;
         $info = pathinfo($path);
         if ($info['extension'] !== 'php') {
             return [];
@@ -85,31 +96,28 @@ class RouterParser
         $routers = [];
         $annotationReader = new AnnotationReader();
         $reflectionClass = new \ReflectionClass($className);
-        // var_dump($className);
-        $controllerAnnotations = $annotationReader->getClassAnnotations($reflectionClass);
         $controllerAnnotation = $annotationReader->getClassAnnotation($reflectionClass, 'Rum\Annotation\Controller');
-        // var_dump($controllerAnnotations);
-        // var_dump($controllerAnnotation);
         if (empty($controllerAnnotation)) {
             return $routers;
         }
-        // var_dump($controllerAnnotation);
         $methods = $reflectionClass->getMethods();
-        var_dump($methods);
         if (empty($methods)) {
             return $routers;
         }
-        var_dump($methods);
+        // var_dump($methods);
         $cont = new $className();
         foreach ($methods as $mehtod) {
-            $routerAnnotation = $annotationReader->getMethodAnnotation($mehtod, 'Router');
+            $routerAnnotation = $annotationReader->getMethodAnnotation($mehtod, 'Rum\Annotation\Router');
             if (empty($routerAnnotation)) {
                 continue;
             }
+            $handleName = $mehtod->name;
             $routers[] = [
-                'path' => $controllerAnnotation['prefix'] . $routerAnnotation['path'],
-                'methods' => $routerAnnotation['method'],
-                'handle' => $cont->$mehtod,
+                'path' => $controllerAnnotation->prefix . $routerAnnotation->path,
+                'methods' => $routerAnnotation->method,
+                'handle' => function (Request $req, Response $res) use ($cont, $handleName) {
+                    $cont->$handleName($req, $res);
+                }
             ];
         }
         return $routers;
