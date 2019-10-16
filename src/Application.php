@@ -61,6 +61,19 @@ class Application extends RouterGroup
         // 简单的日志组件
         $this->use(Logger::middle());
     }
+
+    /**
+     * @method: POST
+     * @param {array} $groupItem 解析控制器得到的路由组
+     * @param {array} $group 路由组
+     * @author: liumurong  <liumurong1@100tal.com>
+     * @Date: 2019-10-16 09:24:35
+     */
+    private function handleRouter($groupItem, RouterGroup $group)
+    {
+        // if($groupItem)
+    }
+
     /**
      * 启动
      */
