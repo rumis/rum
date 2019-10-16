@@ -2,6 +2,7 @@
 
 namespace Rum;
 
+use Rum\Annotation\GroupItem;
 use Rum\Annotation\RouterParser;
 use Rum\Log\Console;
 use Rum\Log\Logger;
@@ -39,7 +40,12 @@ class Application extends RouterGroup
             return $this->default405Method($req, $res);
         };
 
-        // 注解
+        // 添加默认的第一个组件
+        $this->use(BodyParser());
+        // 简单的日志组件
+        $this->use(Logger::middle());
+
+        // 解析注解路由
         if (!empty($opts['enableControllerAnnotation'])) {
             if (empty($opts['baseNamespace'])) {
                 Logger::fatal('启用路由解析时必须指定控制器根命名空间');
@@ -50,16 +56,9 @@ class Application extends RouterGroup
                 return;
             }
             $p = new RouterParser($opts['baseNamespace'], $opts['baseControllerPath'], $opts['ignoreAnnotations']);
-            $routers = $p->handle();
-            foreach ($routers as $router) {
-                $this->addroute($router['methods'], $router['path'], $router['handle']);
-            }
+            $groups = $p->handle();
+            $this->handleRouter($groups);
         }
-
-        // 添加默认的第一个组件
-        $this->use(BodyParser());
-        // 简单的日志组件
-        $this->use(Logger::middle());
     }
 
     /**
@@ -69,9 +68,17 @@ class Application extends RouterGroup
      * @author: liumurong  <liumurong1@100tal.com>
      * @Date: 2019-10-16 09:24:35
      */
-    private function handleRouter($groupItem, RouterGroup $group)
+    private function handleRouter($groupItems)
     {
-        // if($groupItem)
+        foreach ($groupItems as $item) {
+            $group = $this->group($item->getPrefix(), ...$item->getMiddlewares());
+            foreach ($item->getRouters() as $router) {
+                $methods = explode(',', $router['methods']);
+                foreach ($methods as $method) {
+                    $group->handle($method, $router['path'], $router['handle']);
+                }
+            }
+        }
     }
 
     /**
@@ -126,6 +133,16 @@ class Application extends RouterGroup
     }
 
     /**
+     * 创建新的路由组
+     */
+    public function group($path, ...$middleware)
+    {
+        $g = new RouterGroup($path, $this);
+        $g->use(...$this->handlers, ...$middleware);
+        return $g;
+    }
+
+    /**
      * 添加路由
      */
     public function addRoute($method, $path, ...$handles)
@@ -142,21 +159,13 @@ class Application extends RouterGroup
             $this->trees[$method] = new Node();
         }
         $this->trees[$method]->addRoute($path, $handles);
-        Logger::info('{method}.{router}', [
+        Logger::info('{method}:{router}', [
             'router' => $path,
             'method' => $method,
         ]);
     }
 
-    /**
-     * 创建新的路由组
-     */
-    public function group($path, ...$middleware)
-    {
-        $g = new RouterGroup($path, $this);
-        $g->use(...$this->handlers, ...$middleware);
-        return $g;
-    }
+
 
     /**
      * 静态路径

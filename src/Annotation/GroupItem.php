@@ -9,10 +9,6 @@ namespace Rum\Annotation;
 class GroupItem
 {
     /**
-     * 子路由组
-     */
-    private $groups;
-    /**
      * 路由
      */
     private $routers;
@@ -25,21 +21,13 @@ class GroupItem
      */
     private $middlewares;
 
-    public function __construct($prefix = '', $groups = [], $routers = [], $middlewares = [])
+    public function __construct($prefix = '', $routers = [], $middlewares = [])
     {
-        $this->groups = $groups;
         $this->routers = $routers;
         $this->prefix = $prefix;
         $this->middlewares = $middlewares;
     }
 
-    /**
-     * 添加路由组
-     */
-    public function addGroup($gourp)
-    {
-        array_push($this->groups, $gourp);
-    }
     /**
      * 添加路由
      */
@@ -62,13 +50,6 @@ class GroupItem
         $this->prefix = $prefix;
     }
 
-    /**
-     * 获取路由组集合
-     */
-    public function getGroups()
-    {
-        return $this->groups;
-    }
     /**
      * 获取路由集合
      */
