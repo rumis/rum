@@ -12,7 +12,6 @@ const CATCHALL = 8; // 大参数节点
 
 class Node
 {
-
     // 此节点上的URL路径
     public $path;
     // 是不是参数节点
@@ -25,7 +24,6 @@ class Node
     public $children;
     // 处理方法
     public $handles;
-
 
     /**
      * 构造函数
@@ -42,6 +40,9 @@ class Node
     /**
      * 添加子节点
      * 调用此方法前，节点的path参数为空
+     * @param string $path 路由路径
+     * @param func[] 响应方法集合
+     * @return void
      */
     public function insertChild($path, $handles)
     {
@@ -93,7 +94,6 @@ class Node
                 if (strlen($this->path) > 0 && substr($this->path, strlen($this->path) - 1) == '/') {
                     Logger::fatal('和根节点冲突');
                 }
-                // $i--;
                 if ($path[$i - 1] != '/') {
                     Logger::fatal('*参数前必须为/');
                 }
@@ -118,6 +118,9 @@ class Node
 
     /**
      * 添加路由
+     * @param string $path 路由路径
+     * @param func[] 响应方法集合
+     * @return void
      */
     public function addRoute($path, $handles)
     {
@@ -133,6 +136,7 @@ class Node
                 $i++;
             }
             if ($i < strlen($this->path)) {
+                // 取原路径的后一段生成新的节点并继承原节点的所有属性
                 $child = new Node();
                 $child->path = substr($this->path, $i);
                 $child->wildChild = $this->wildChild;
@@ -141,6 +145,7 @@ class Node
                 $child->children = $this->children;
                 $child->handles = $this->handles;
 
+                // 更新原节点：子节点，索引，路径等
                 $this->children = [$child];
                 $this->indices = $this->path[$i];
                 $this->path = substr($path, 0, $i);
@@ -148,10 +153,11 @@ class Node
                 $this->wildChild = false;
             }
             if ($i < strlen($path)) {
+                // 新路径的后半段生成新的节点并插入
                 $path = substr($path, $i);
                 if ($this->wildChild) {
                     $firstChild = $this->children[0];
-                    // 检测是否符合参数节点
+                    // 检测子节点是否是参数节点
                     if (
                         strlen($path) >= strlen($firstChild->path) &&
                         $firstChild->path == substr($path, 0, strlen($firstChild->path)) && (strlen($firstChild->path) >= strlen($path) ||
@@ -159,31 +165,29 @@ class Node
                     ) {
                         // 符合参数节点
                         $firstChild->addRoute($path, $handles);
-                        // continue walk;
                         return;
                     } else {
-                        // 参数冲突
-                        Logger::fatal('参数冲突');
+                        // 路径和参数节点冲突
+                        Logger::fatal('路径冲突');
                     }
                 }
                 $c = $path[0];
+                // 当前节点为参数节点，并且只有一个子节点，递归进入下一级
                 if ($this->nType == PARAM && $c == '/' && count($this->children) == 1) {
                     $firstChild = $this->children[0];
                     $firstChild->addRoute($path, $handles);
-                    // continue walk;
                     return;
                 }
-
+                // 通过索引查找所有子节点，符合条件的递归进入下一级节点
                 for ($i = 0; $i < strlen($this->indices); $i++) {
                     if ($c == $this->indices[$i]) {
                         $firstChild = $this->children[$i];
                         $firstChild->addRoute($path, $handles);
-                        // continue walk;
                         return;
                     }
                 }
 
-                // 其他情况
+                // 其他情况，生成子节点
                 if ($c != ':' && $c != '*') {
                     $this->indices .= $c;
                     $otchild = new Node();
@@ -191,11 +195,12 @@ class Node
                     $otchild->insertChild($path, $handles);
                     return;
                 }
+                // 使用剩余路径构造子节点
                 $this->insertChild($path, $handles);
                 return;
             } else if ($i == strlen($path)) {
                 if ($this->handles != null) {
-                    Logger::fatal('关联方法已存在');
+                    Logger::fatal('此路由的响应方法已存在');
                 }
                 $this->handles = $handles;
             }
@@ -205,6 +210,9 @@ class Node
 
     /**
      * 获取Handle
+     * @param string $path 路由路径
+     * @param array $params URL路径中的参数(父级节点)
+     * @return array 
      */
     public function getValue($path, $params = [])
     {

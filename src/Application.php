@@ -22,7 +22,15 @@ class Application extends RouterGroup
     private $noMethod;
 
     /**
-     * 构造方法
+     * Rum
+     * @param boolean  $opts.handleMethodNotAllowed 是否允许405
+     * @param func  $opts.noRoute 405响应方法
+     * @param func  $opts.noMethod 404响应方法
+     * @param boolean  $opts.enableControllerAnnotation 是否允许注解路由
+     * @param string  $opts.baseNamespace 注解路由的根命名空间
+     * @param string  $opts.baseControllerPath 注解路由的根路径
+     * @param string[]  $opts.ignoreAnnotations 忽略的注解
+     * @return
      */
     public function __construct($opts)
     {
@@ -62,9 +70,8 @@ class Application extends RouterGroup
     }
 
     /**
-     * @method: POST
+     * 将解析控制器路由得到的参数转化为真正的路由
      * @param {array} $groupItem 解析控制器得到的路由组
-     * @param {array} $group 路由组
      * @author: liumurong  <liumurong1@100tal.com>
      * @Date: 2019-10-16 09:24:35
      */
@@ -134,6 +141,9 @@ class Application extends RouterGroup
 
     /**
      * 创建新的路由组
+     * @param string $path 路径
+     * @param func[] $middleware 中间件集合
+     * @return RouterGroup 
      */
     public function group($path, ...$middleware)
     {
@@ -144,6 +154,10 @@ class Application extends RouterGroup
 
     /**
      * 添加路由
+     * @param string $method 方法名
+     * @param string $path 路径
+     * @param func[] $handles 中间件集合
+     * @return 
      */
     public function addRoute($method, $path, ...$handles)
     {
@@ -175,6 +189,9 @@ class Application extends RouterGroup
 
     /**
      * 处理HTTP请求
+     * @param Request $req 请求对象
+     * @param Response $res 响应对象
+     * @return
      */
     public function handleHTTPRequest(Request &$req, Response &$res)
     {
@@ -211,6 +228,7 @@ class Application extends RouterGroup
 
     /**
      * 设置404处理方法
+     * @param func $handle 
      */
     public function resetNoRoute($handle)
     {
@@ -218,6 +236,7 @@ class Application extends RouterGroup
     }
     /**
      * 设置405处理方法
+     * @param func $handle 
      */
     public function resetNoMethod($handle)
     {
@@ -226,6 +245,9 @@ class Application extends RouterGroup
 
     /**
      * 默认的404方法
+     * @param Request $req 请求对象
+     * @param Response $res 响应对象
+     * @return
      */
     private function default404Method(Request $req, Response $res)
     {
@@ -234,6 +256,9 @@ class Application extends RouterGroup
     }
     /**
      * 默认的405方法
+     * @param Request $req 请求对象
+     * @param Response $res 响应对象
+     * @return
      */
     private function default405Method(Request $req, Response $res)
     {
