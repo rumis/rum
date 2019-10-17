@@ -47,7 +47,7 @@ class Node
     public function insertChild($path, $handles)
     {
         $handleNode = $this;
-        // $handleNode->path = $path;
+        $handleNode->path = $path;
         for ($i = 0, $max = strlen($path); $i < $max; $i++) {
             $c = $path[$i];
             // 检测是否包含参数
