@@ -2,11 +2,14 @@
 
 namespace Rum\Log;
 
+/**
+ * 方法类
+ */
 class Util
 {
     /**
-    * Interpolates context values into the message placeholders.
-    */
+     * Interpolates context values into the message placeholders.
+     */
     public static function interpolate($message, array $context = array())
     {
         // build a replacement array with braces around the context keys

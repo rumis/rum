@@ -184,6 +184,8 @@ class Logger
 
     /**
      * 日志中间件
+     * 记录请求RUL
+     * @return func 中间件函数
      */
     public static function middle()
     {

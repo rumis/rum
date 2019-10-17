@@ -24,7 +24,10 @@ class RouterParser
     private $controllerBasePath;
 
     /**
-     * 构造
+     * 路由注解解析
+     * @param string $baseNamespace 路由根命名空间
+     * @param string $controllerBasePath 路由php文件的根目录
+     * @param string[] $ignoreAnnotations 需要忽略的注解(比如@author,@date等)
      */
     public function __construct($baseNamespace, $controllerBasePath, $ignoreAnnotations = [])
     {
@@ -44,6 +47,7 @@ class RouterParser
 
     /**
      * 解析所有的注解路由
+     * @return GroupItem[] 路由组集合
      */
     public function handle()
     {
@@ -51,9 +55,12 @@ class RouterParser
     }
 
     /**
-     * 处理目录下内容
+     * 解析某目录下的所有路由
+     * @param string $path 路径
+     * @param string $workspace 命名空间
+     * @return GroupItem[] 路由组集合
      */
-    public function handleDirectory($path, $workspace, $groupName = '')
+    public function handleDirectory($path, $workspace)
     {
         if (!is_dir($path)) {
             return;
@@ -63,11 +70,10 @@ class RouterParser
             Logger::error('can not open controller directory {path}', ['path' => $dir]);
             return [];
         }
-
         $groups = [];
         while (($file = readdir($dir)) !== false) {
             if ($file[0] == '.' || $file == 'vendor') {
-                // 隐藏、vendor目录忽略
+                // 忽略隐藏、vendor目录
                 continue;
             }
             $absulatePath = $path . '/' . $file;
@@ -81,7 +87,10 @@ class RouterParser
     }
 
     /**
-     *  解析Controller文件，读取所有routers
+     * 解析Controller文件，读取所有routers
+     * @param string $path 文件路径
+     * @param string $workspace 命名空间
+     * @return GroupItem 路由
      */
     public function handleFile($path, $workspace)
     {
@@ -96,12 +105,14 @@ class RouterParser
         }
         // var_dump($className);
         $group = new GroupItem($info['filename']);
+        // 读取Controller注解
         $annotationReader = new AnnotationReader();
         $reflectionClass = new \ReflectionClass($className);
         $controllerAnnotation = $annotationReader->getClassAnnotation($reflectionClass, 'Rum\Annotation\Controller');
         if (empty($controllerAnnotation)) {
             return $group;
         }
+        // 记录当前路由组的统一前缀路径
         $group->setPrefix($controllerAnnotation->prefix);
         $methods = $reflectionClass->getMethods();
         if (empty($methods)) {
@@ -110,7 +121,7 @@ class RouterParser
         // var_dump($methods);
         $cont = new $className();
         foreach ($methods as $method) {
-            // $routerAnnotation = $annotationReader->getMethodAnnotation($mehtod, 'Rum\Annotation\Router');
+            // 解析Router，Middleware注解
             $routerAnnotations = $annotationReader->getMethodAnnotations($method);
             foreach ($routerAnnotations as $anno) {
                 $handleName = $method->name;

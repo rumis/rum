@@ -5,42 +5,51 @@ namespace Rum;
 /**
  * HTTP响应对象
  */
-class Response{
-    
+class Response
+{
     private $res; // swoole中的response对象
 
-    public function __construct($res){
-        $this->res=$res;
+    /**
+     * 响应对象
+     * @param Http\Response $res  swoole中的response对象
+     * @return
+     */
+    public function __construct($res)
+    {
+        $this->res = $res;
     }
 
     /**
      * 向浏览器写入内容
      * 可以多次调用
      * 发送数据大小受参数buffer_output_size影响
-     * @param {mixed} $data
-     * @return
+     * @param {mixed} $data 内容
+     * @return 
      */
-    public function write($data){
+    public function write($data)
+    {
         return $this->res->write($data);
     }
 
     /**
-     * 发送内容并结束处理
-     * @param {mixed} $item
+     * 发送内容并结束处理,整个生命周期中只可以调用一次
+     * @param {mixed} $item 内容
      * @return 
      */
-    public function end($item){
-        $this->res->end($item);
+    public function end($item)
+    {
+        return $this->res->end($item);
     }
 
     /**
      * 设置http响应状态码
      * 必须为合法的HttpCode，否则会报错
      * 需要在end之前配置
-     * @param {int} $code
+     * @param {int} $code 状态码
      * @return
      */
-    public function status($code){
+    public function status($code)
+    {
         return $this->status($code);
     }
 
@@ -51,54 +60,60 @@ class Response{
      * @param {string} $value Header的Value
      * @return
      */
-    public function header($key,$value){
-        return $this->res->header($key,$value);
+    public function header($key, $value)
+    {
+        return $this->res->header($key, $value);
     }
 
     /**
      * 设置Cookie
      * cookie设置必须在end方法之前
-     * @param {string} $name 
-     * @param {string} $value
-     * @param {int} $maxage
-     * @param {string} $path
-     * @param {string} $domain
-     * @param {bool} $secure
-     * @param {bool} $httponly
+     * @param {string} $name  键
+     * @param {string} $value 值
+     * @param {int} $maxage 生命周期
+     * @param {string} $path 路径
+     * @param {string} $domain 域
+     * @param {bool} $secure 只有https协议才允许发送
+     * @param {bool} $httponly 是否只允许http发送，js不可读取cookie内容
+     * @return
      */
-    public function cookie($name,$value='',$maxage=0,$path='/',$domain='',$secure=false,$httponly=false){
-        return $this->res->cookie($name,$value,empty($maxage)?0:time()+$maxage,$path,$domain,$secure,$httponly);
+    public function cookie($name, $value = '', $maxage = 0, $path = '/', $domain = '', $secure = false, $httponly = false)
+    {
+        return $this->res->cookie($name, $value, empty($maxage) ? 0 : time() + $maxage, $path, $domain, $secure, $httponly);
     }
     /**
      * 发送html到浏览器
      * @param {string} $value 内容
-     * 
+     * @param {int} $code 状态码，默认好评
      * @return mixed
      */
-    public function html($value,$code=200){
-        $this->header(Header::CONTENTTYPE,Mime::HTML);
+    public function html($value, $code = 200)
+    {
+        $this->header(Header::CONTENTTYPE, Mime::HTML);
         $this->status($code);
         return $this->end($value);
     }
     /**
      * 发送json对象到浏览器
      * @param {array} $value 内容
-     * 
+     * @param {int} $code 状态码，默认200
      * @return mixed
      */
-    public function json($value,$code=200){
-        $this->header(Header::CONTENTTYPE,Mime::JSON);
+    public function json($value, $code = 200)
+    {
+        $this->header(Header::CONTENTTYPE, Mime::JSON);
         $this->status($code);
         return $this->end(json_encode($value));
     }
     /**
      * 发送XML到浏览器
      * @param {string} $value 内容
-     * 
+     * @param {int} $code 状态码，默认200
      * @return mixed
      */
-    public function xml($value,$code=200){
-        $this->header(Header::CONTENTTYPE,Mime::XML);
+    public function xml($value, $code = 200)
+    {
+        $this->header(Header::CONTENTTYPE, Mime::XML);
         $this->status($code);
         return $this->end($value);
     }
@@ -106,11 +121,12 @@ class Response{
     /**
      * 发送字符串到浏览器
      * @param {string} $value 内容
-     * 
+     * @param {int} $code 状态码，默认200
      * @return mixed
      */
-    public function string($value,$code=200){
-        $this->header(Header::CONTENTTYPE,Mime::PLAIN);
+    public function string($value, $code = 200)
+    {
+        $this->header(Header::CONTENTTYPE, Mime::PLAIN);
         $this->status($code);
         return $this->end($value);
     }
@@ -119,11 +135,12 @@ class Response{
      * 重定向
      * 调用此方法会自动end并结束响应
      * @param {string} $url 需要重定向到的网址 
-     * @param {301|302} $code，默认302
+     * @param {301|302} $code 状态码，默认302
      * @return
      */
-    public function redirect($url,$code=302){
-        return $this->res->redirect($url,$code);
+    public function redirect($url, $code = 302)
+    {
+        return $this->res->redirect($url, $code);
     }
 
     /**
@@ -134,8 +151,8 @@ class Response{
      * @param {string} $filepath 文件路径
      * @return
      */
-    public function file($filepath){
+    public function file($filepath)
+    {
         return $this->res->sendfile($filepath);
     }
-
 }

@@ -4,7 +4,6 @@ namespace Rum;
 
 /**
  * 路由组
- * @Date 2019年10月13日20点42分
  */
 class RouterGroup
 {
@@ -12,6 +11,12 @@ class RouterGroup
     public $handlers;
     public $basePath;
     public $app;
+    /**
+     * 路由组
+     * @param string $path 此路由组统一根路径
+     * @param $rum app对象
+     * @return RouterGroup
+     */
     public function __construct($path, &$rum)
     {
         $this->basePath = $path;
@@ -19,10 +24,9 @@ class RouterGroup
         $this->handlers = [];
     }
 
-
-
     /**
      * 获取路由组的根路径
+     * @return string
      */
     public function basePath()
     {
@@ -31,34 +35,43 @@ class RouterGroup
 
     /**
      * 挂载插件
+     * @param func[] 插件集合
+     * @return void
      */
     public function use(...$middleware)
     {
         array_push($this->handlers, ...$middleware);
-        return $this;
     }
     /**
-     * 处理路由
+     * 添加路由
+     * @param string $method 方法
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function handle($method, $relativePath, $handle)
     {
         $absolutePath  = Util::path_join($this->basePath, $relativePath);
         $this->app->addRoute($method, $absolutePath, ...array_merge($this->handlers, [$handle]));
-        return $this;
     }
     /**
      * 一次添加全部方法的路由
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function any($relativePath, $handle)
     {
         foreach (Method::S as $method) {
             $this->handle($method, $relativePath, $handle);
         }
-        return $this;
     }
 
     /**
      * GET请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function get($relativePath, $handle)
     {
@@ -66,6 +79,9 @@ class RouterGroup
     }
     /**
      * POST请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function post($relativePath, $handle)
     {
@@ -73,6 +89,9 @@ class RouterGroup
     }
     /**
      * HEAD请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function head($relativePath, $handle)
     {
@@ -80,6 +99,9 @@ class RouterGroup
     }
     /**
      * DELETE请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function delete($relativePath, $handle)
     {
@@ -87,6 +109,9 @@ class RouterGroup
     }
     /**
      * PATCH请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function patch($relativePath, $handle)
     {
@@ -94,6 +119,9 @@ class RouterGroup
     }
     /**
      * PUT请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function put($relativePath, $handle)
     {
@@ -101,6 +129,9 @@ class RouterGroup
     }
     /**
      * OPTIONS请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function options($relativePath, $handle)
     {
@@ -109,6 +140,9 @@ class RouterGroup
 
     /**
      * CONNECT请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function connect($relativePath, $handle)
     {
@@ -116,6 +150,9 @@ class RouterGroup
     }
     /**
      * TRACE请求
+     * @param string $relativePath 相对路径
+     * @param func $handle 请求响应方法
+     * @return void
      */
     public function trace($relativePath, $handle)
     {

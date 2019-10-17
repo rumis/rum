@@ -3,13 +3,14 @@
 namespace Rum\Annotation;
 
 /**
- * 控制器
+ * 控制器注解
+ * 
  * @Annotation
  */
 class Controller
 {
     /**
-     * only one unnamed param
+     * 仅包含的一个匿名参数的名称
      * @var string
      */
     protected $defaultFieldName = 'prefix';
