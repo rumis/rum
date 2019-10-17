@@ -47,7 +47,7 @@ class Node
     public function insertChild($path, $handles)
     {
         $handleNode = $this;
-        $handleNode->path = $path;
+        // $handleNode->path = $path;
         for ($i = 0, $max = strlen($path); $i < $max; $i++) {
             $c = $path[$i];
             // 检测是否包含参数
@@ -71,7 +71,9 @@ class Node
                 Logger::fatal('必须存在参数名称');
             }
             if ($c == ':') {
-                $this->path = substr($path, 0, $i);
+                if ($i > 0) {
+                    $this->path = substr($path, 0, $i);
+                }
                 $this->wildChild = true;
 
                 $child = new Node();
@@ -90,9 +92,6 @@ class Node
             } else {
                 if ($end != $max) {
                     Logger::fatal('*参数只能出现在路由的最后一段');
-                }
-                if (strlen($this->path) > 0 && substr($this->path, strlen($this->path) - 1) == '/') {
-                    Logger::fatal('和根节点冲突');
                 }
                 if ($path[$i - 1] != '/') {
                     Logger::fatal('*参数前必须为/');
