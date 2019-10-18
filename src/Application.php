@@ -204,7 +204,9 @@ class Application extends RouterGroup
                 if (!empty($handle['handles'])) {
                     $req->setParams($handle['params']); // 记录URL中的参数
                     foreach ($handle['handles'] as $fn) {
-                        $fn($req, $res);
+                        if (!$res->aborted()) {
+                            $fn($req, $res);
+                        }
                     }
                     return;
                 }

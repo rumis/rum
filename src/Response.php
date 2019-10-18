@@ -8,6 +8,7 @@ namespace Rum;
 class Response
 {
     private $res; // swoole中的response对象
+    private $aborted;
 
     /**
      * 响应对象
@@ -17,6 +18,7 @@ class Response
     public function __construct($res)
     {
         $this->res = $res;
+        $this->droped = false;
     }
 
     /**
@@ -154,5 +156,24 @@ class Response
     public function file($filepath)
     {
         return $this->res->sendfile($filepath);
+    }
+
+    /**
+     * 放弃整个请求流程
+     * 一般用于中间件中，放弃后返回前端的内容由中间件本身确定。
+     * @return void
+     */
+    public function abort()
+    {
+        $this->droped = true;
+    }
+
+    /**
+     * 当前流程是否已经被放弃
+     * @return boolean
+     */
+    public function aborted()
+    {
+        return $this->droped;
     }
 }
