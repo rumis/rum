@@ -14,7 +14,7 @@ class Node
 {
     // 此节点上的URL路径
     public $path;
-    // 是不是参数节点
+    // 子节点是不是参数节点
     public $wildChild;
     // 节点类型
     public $nType;
