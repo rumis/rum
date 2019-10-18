@@ -195,35 +195,41 @@ class Application extends RouterGroup
      */
     public function handleHTTPRequest(Request &$req, Response &$res)
     {
-        $method = $req->method();
-        $path = $req->path();
-        // 路由存在
-        if (!empty($this->trees[$method])) {
-            $handle = $this->trees[$method]->getValue($path);
-            if (!empty($handle['handles'])) {
-                $req->setParams($handle['params']); // 记录URL中的参数
-                foreach ($handle['handles'] as $fn) {
-                    $fn($req, $res);
+        try {
+            $method = $req->method();
+            $path = $req->path();
+            // 路由存在
+            if (!empty($this->trees[$method])) {
+                $handle = $this->trees[$method]->getValue($path);
+                if (!empty($handle['handles'])) {
+                    $req->setParams($handle['params']); // 记录URL中的参数
+                    foreach ($handle['handles'] as $fn) {
+                        $fn($req, $res);
+                    }
+                    return;
                 }
-                return;
             }
-        }
-        // 检测是否包含同PATH但是METHOD不同的路由，提示405错误
-        if ($this->handleMethodNotAllowed) {
-            foreach ($this->trees as $m => $tree) {
-                if ($m != $method) {
-                    $handle = $tree->getValue($path);
-                    if (!empty($handle) && !empty($handle['handles'])) {
-                        $noMethod = $this->noMethod;
-                        $noMethod($req, $res);
-                        return;
+            // 检测是否包含同PATH但是METHOD不同的路由，提示405错误
+            if ($this->handleMethodNotAllowed) {
+                foreach ($this->trees as $m => $tree) {
+                    if ($m != $method) {
+                        $handle = $tree->getValue($path);
+                        if (!empty($handle) && !empty($handle['handles'])) {
+                            $noMethod = $this->noMethod;
+                            $noMethod($req, $res);
+                            return;
+                        }
                     }
                 }
             }
+            // 未包含路由，提示404错误。
+            $noRoute = $this->noRoute;
+            $noRoute($req, $res);
+        } catch (\Throwable $th) {
+            Logger::error($th->getMessage());
+            $res->status(500);
+            $res->end($th->getMessage());
         }
-        // 未包含路由，提示404错误。
-        $noRoute = $this->noRoute;
-        $noRoute($req, $res);
     }
 
     /**
