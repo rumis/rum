@@ -50,7 +50,7 @@ class Response
      */
     public function status($code)
     {
-        return $this->status($code);
+        return $this->res->status($code);
     }
 
     /**
