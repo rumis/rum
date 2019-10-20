@@ -86,9 +86,13 @@ final class NodeTest extends TestCase
     public function testPathConflict()
     {
         $node = new Node();
-        $p1  = 'user';
-        $this->expectException('');
+        $p1  = '/user/name';
+        $p2  = '/user/:one';
+        $this->expectException('Exception');
         $node->addRoute($p1, [function () { }]);
+        $node->addRoute($p2, [function () { }]);
+        $node->addRoute($p2, [function () { }]);
+
 
         $this->assertEquals(1, 1);
     }
