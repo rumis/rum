@@ -56,11 +56,11 @@ class Application extends RouterGroup
         // 解析注解路由
         if (!empty($opts['enableControllerAnnotation'])) {
             if (empty($opts['baseNamespace'])) {
-                Logger::fatal('启用路由解析时必须指定控制器根命名空间');
+                Logger::fatal('启用路由注解时必须指定控制器根命名空间');
                 return;
             }
             if (empty($opts['baseControllerPath'])) {
-                Logger::fatal('启用路由解析时必须指定控制器根路径');
+                Logger::fatal('启用路由注解时必须指定控制器根路径');
                 return;
             }
             $p = new RouterParser($opts['baseNamespace'], $opts['baseControllerPath'], $opts['ignoreAnnotations']);

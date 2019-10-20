@@ -51,7 +51,12 @@ class RouterParser
      */
     public function handle()
     {
-        return $this->handleDirectory($this->controllerBasePath, $this->baseNamespace);
+        try {
+            return $this->handleDirectory($this->controllerBasePath, $this->baseNamespace);
+        } catch (\Throwable $th) {
+            Logger::error('解析注解路由异常:{errmsg}', ['errmsg' => $th->getMessage()]);
+            return [];
+        }
     }
 
     /**

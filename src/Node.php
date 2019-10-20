@@ -2,6 +2,7 @@
 
 namespace Rum;
 
+use Exception;
 use Rum\Log\Logger;
 
 const NORMAL = 1; // 普通节点
@@ -59,16 +60,16 @@ class Node
                 switch ($path[$end]) {
                     case ':':
                     case '*':
-                        Logger::fatal('一段路径中只能包含一个参数项');
+                        throw new Exception('一段路径中只能包含一个参数项');
                     default:
                         $end++;
                 }
             }
             if (count($this->children) > 0) {
-                Logger::fatal('参数节点不可包含其他子节点');
+                throw new Exception('参数节点不可包含其他子节点');
             }
             if ($end - $i < 2) {
-                Logger::fatal('必须存在参数名称');
+                throw new Exception('必须存在参数名称');
             }
             if ($c == ':') {
                 if ($i > 0) {
@@ -91,10 +92,10 @@ class Node
                 break;
             } else {
                 if ($end != $max) {
-                    Logger::fatal('*参数只能出现在路由的最后一段');
+                    throw new Exception('*参数只能出现在路由的最后一段');
                 }
                 if ($path[$i - 1] != '/') {
-                    Logger::fatal('*参数前必须为/');
+                    throw new Exception('*参数前必须为/');
                 }
                 // 当前节点路径
                 $this->path = substr($path, 0, $i);
@@ -167,7 +168,7 @@ class Node
                         return;
                     } else {
                         // 路径和参数节点冲突
-                        Logger::fatal('路径冲突');
+                        throw new Exception('路径冲突');
                     }
                 }
                 $c = $path[0];
@@ -199,7 +200,7 @@ class Node
                 return;
             } else if ($i == strlen($path)) {
                 if ($this->handles != null) {
-                    Logger::fatal('此路由的响应方法已存在');
+                    throw new Exception('此路由的响应方法已存在，请勿重复添加');
                 }
                 $this->handles = $handles;
             }
