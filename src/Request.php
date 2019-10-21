@@ -179,8 +179,11 @@ class Request
      * @param string $key header的key
      * @return string
      */
-    public function header($key = '')
+    public function header($key = null)
     {
+        if (empty($key)) {
+            return $this->req->header;
+        }
         $key = strtolower($key); // swoole要求所有key均为小写;
         return empty($this->req->header[$key]) ? '' : $this->req->header[$key];
     }
@@ -189,8 +192,11 @@ class Request
      * @param string $name 键
      * @return string 
      */
-    public function cookie($name = '')
+    public function cookie($name = null)
     {
+        if (empty($key)) {
+            return $this->req->cookie;
+        }
         return empty($this->req->cookie[$name]) ? '' : $this->req->cookie[$name];
     }
 }
