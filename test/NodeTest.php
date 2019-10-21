@@ -81,27 +81,118 @@ final class NodeTest extends TestCase
     }
 
     /**
-     * 非法，冲突路径测试
+     * 冲突--参数节点和普通节点冲突
      */
-    public function testPathConflict()
+    public function testConflictParamsPath1()
     {
         $node = new Node();
         $p1  = '/user/name';
         $p2  = '/user/:one';
         $this->expectException('Exception');
-        $node->addRoute($p1, [function () { }]);
-        $node->addRoute($p2, [function () { }]);
-        $node->addRoute($p2, [function () { }]);
-
-
-        $this->assertEquals(1, 1);
+        try {
+            $node->addRoute($p1, [function () { }]);
+            $node->addRoute($p2, [function () { }]);
+        } catch (\Throwable $th) {
+            $this->assertEquals($th->getMessage(), '参数节点不可包含其他子节点');
+            throw $th;
+        }
     }
 
     /**
-     * 中间件测试
+     * 冲突--参数节点和普通节点冲突
      */
-    public function testMiddleware()
+    public function testConflictParamsPath2()
     {
-        $this->assertEquals(2, 2);
+        $node = new Node();
+        $p1  = '/user/name/getone';
+        $p2  = '/user/:one';
+        $this->expectException('Exception');
+        try {
+            $node->addRoute($p1, [function () { }]);
+            $node->addRoute($p2, [function () { }]);
+        } catch (\Throwable $th) {
+            $this->assertEquals($th->getMessage(), '参数节点不可包含其他子节点');
+            throw $th;
+        }
+    }
+    /**
+     * 冲突--路由重复
+     */
+    public function testConflictParamsPath3()
+    {
+        $node = new Node();
+        $p1  = '/user/name';
+        $p2  = '/user/name';
+        $this->expectException('Exception');
+        try {
+            $node->addRoute($p1, [function () { }]);
+            $node->addRoute($p2, [function () { }]);
+        } catch (\Throwable $th) {
+            $this->assertEquals($th->getMessage(), '此路由的响应方法已存在，请勿重复添加');
+            throw $th;
+        }
+    }
+
+    /**
+     * 冲突--一段路径只能有一个参数
+     */
+    public function testConflictParamsPath4()
+    {
+        $node = new Node();
+        $p1  = '/user/:name:id';
+        $this->expectException('Exception');
+        try {
+            $node->addRoute($p1, [function () { }]);
+        } catch (\Throwable $th) {
+            $this->assertEquals($th->getMessage(), '一段路径中只能包含一个参数项');
+            throw $th;
+        }
+    }
+    /**
+     * 冲突--必须存在参数名称
+     */
+    public function testConflictParamsPath5()
+    {
+        $node = new Node();
+        $p1  = '/user/:/name';
+        $this->expectException('Exception');
+        try {
+            $node->addRoute($p1, [function () { }]);
+        } catch (\Throwable $th) {
+            $this->assertEquals($th->getMessage(), '必须存在参数名称');
+            throw $th;
+        }
+    }
+
+    /**
+     * 冲突--*参数只能出现在路由的最后一段
+     */
+    public function testConflictParamsPath6()
+    {
+        $node = new Node();
+        $p1  = '/user/*item/one';
+        $this->expectException('Exception');
+        try {
+            $node->addRoute($p1, [function () { }]);
+        } catch (\Throwable $th) {
+            $this->assertEquals($th->getMessage(), '*参数只能出现在路由的最后一段');
+            throw $th;
+        }
+    }
+
+    /**
+     * 冲突--*参数前必须为/
+     */
+    public function testConflictParamsPath7()
+    {
+        $node = new Node();
+        $p1  = '/user/item*one';
+        $this->expectException('Exception');
+        try {
+            $node->addRoute($p1, [function () { }]);
+        } catch (\Throwable $th) {
+            $this->assertEquals($th->getMessage(), '*参数前必须为/');
+            throw $th;
+        }
     }
 }
