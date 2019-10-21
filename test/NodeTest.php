@@ -5,6 +5,8 @@ declare(strict_types=1);
 use PHPUnit\Framework\TestCase;
 use Rum\Node;
 
+require __DIR__ . '/../vendor/autoload.php';
+
 /**
  * 路由树测试
  */
