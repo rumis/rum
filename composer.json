@@ -9,16 +9,21 @@
             "email": "huanjiesm@163.com"
         }
     ],
-    "repositories": {
-        "packagist": {
+    "repositories": [
+        {
+            "type": "path",
+            "url": "/home/www/rum/rumtest"
+        },
+        {
             "type": "composer",
             "url": "https://packagist.phpcomposer.com"
         }
-    },
+    ],
     "require": {
         "php": ">=7.3.0",
         "psr/log": "1.1.0",
-        "doctrine/annotations": "^1.8"
+        "doctrine/annotations": "^1.8",
+        "rumis/rumtest": "dev-master"
     },
     "autoload": {
         "psr-4": {
