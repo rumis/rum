@@ -38,7 +38,7 @@ class Response
      * @param {mixed} $item 内容
      * @return 
      */
-    public function end($item)
+    public function end($item = null)
     {
         return $this->res->end($item);
     }
