@@ -8,7 +8,7 @@ namespace Rum;
 class Response
 {
     private $res; // swoole中的response对象
-    private $aborted;
+    private $droped;
 
     /**
      * 响应对象
