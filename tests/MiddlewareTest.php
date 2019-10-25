@@ -38,6 +38,26 @@ final class MiddlewareTest extends TestCase
                 $this->assertEquals($b['comp_name'], 'xes');
                 $wg->done();
             });
+
+            $chan2 = new Channel();
+            HttpClient::post('127.0.0.1', $port, '/abort/drop', [], [], $chan2);
+            $wg->add();
+            go(function () use ($chan2, $wg) {
+                $data = $chan2->pop();
+                $this->assertEquals($data['code'], 401);
+                $this->assertEquals($data['body'], 'Unauthorized');
+                $wg->done();
+            });
+
+            $chan3 = new Channel();
+            HttpClient::post('127.0.0.1', $port, '/abort/drop', ['Authorization' => 'liumurong'], [], $chan3);
+            $wg->add();
+            go(function () use ($chan3, $wg) {
+                $data = $chan3->pop();
+                $this->assertEquals($data['body'], 'Aborted');
+                $wg->done();
+            });
+
             // 等待杀掉服务进程
             go(function () use ($wg, $pid) {
                 $wg->wait();
@@ -53,6 +73,16 @@ final class MiddlewareTest extends TestCase
             });
             $tgroup->post('param/x1', function (Request $req, Response $res) {
                 $res->json(['group_name' => $req->get('tkey'), 'comp_name' => $req->get('comp')]);
+            });
+            $abortGroup = $app->group('/abort', function (Request $req, Response $res) {
+                $auth = $req->header('authorization');
+                if ($auth != 'liumurong') {
+                    $res->abort();
+                    $res->string('Unauthorized', 401);
+                }
+            });
+            $abortGroup->post('drop', function (Request $req, Response $res) {
+                $res->string('Aborted');
             });
             $app->run($port);
         });
