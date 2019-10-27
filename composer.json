@@ -27,7 +27,8 @@
     },
     "autoload": {
         "psr-4": {
-            "Rum\\": "./src"
+            "Rum\\": "./src",
+            "Rum\\Test\\": "./tests"
         }
     },
     "require-dev": {
