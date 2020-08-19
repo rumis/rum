@@ -115,31 +115,6 @@ class Application extends RouterGroup
     }
 
     /**
-     * 启动2
-     * 另一种协程启动方式
-     */
-    public function runc($port = 9501, $started = null)
-    {
-        go(function () use ($port, $started) {
-            $this->httpServe = new \Co\Http\Server("0.0.0.0", $port, false);
-            $this->httpServe->handle('/', function ($request, $response) {
-                $req = new Request($request);
-                $res = new Response($response);
-                $this->handleHTTPRequest($req, $res);
-            });
-
-            if (!empty($started)) {
-                $this->httpServe->on('start', function () use ($started, $port) {
-                    $started();
-                    Logger::info('server start on 0.0.0.0:{port}', ['port' => $port]);
-                });
-            }
-
-            $this->httpServe->start();
-        });
-    }
-
-    /**
      * 创建新的路由组
      * @param string $path 路径
      * @param func[] $middleware 中间件集合
@@ -185,7 +160,8 @@ class Application extends RouterGroup
      * 静态路径
      */
     public function static($relativePath, $root)
-    { }
+    {
+    }
 
     /**
      * 处理HTTP请求
