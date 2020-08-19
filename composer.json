@@ -11,10 +11,6 @@
     ],
     "repositories": [
         {
-            "type": "path",
-            "url": "/home/www/rum/rumtest"
-        },
-        {
             "type": "composer",
             "url": "https://packagist.phpcomposer.com"
         }
@@ -23,7 +19,7 @@
         "php": ">=7.3.0",
         "psr/log": "1.1.0",
         "doctrine/annotations": "1.8",
-        "rumis/rumtest": "dev-master"
+        "rumis/rumtest": "0.1"
     },
     "autoload": {
         "psr-4": {
@@ -31,6 +27,7 @@
             "Rum\\Test\\": "./tests"
         }
     },
+    "minimum-stability": "dev",
     "require-dev": {
         "phpunit/phpunit": "^8.4"
     }
