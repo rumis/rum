@@ -154,15 +154,6 @@ class Application extends RouterGroup
         ]);
     }
 
-
-
-    /**
-     * 静态路径
-     */
-    public function static($relativePath, $root)
-    {
-    }
-
     /**
      * 处理HTTP请求
      * @param Request $req 请求对象
