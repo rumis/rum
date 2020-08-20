@@ -75,6 +75,7 @@ class Node
                 if ($i > 0) {
                     $this->path = substr($path, 0, $i);
                 }
+                $this->indices = $path[$i];
                 $this->wildChild = true;
 
                 $child = new Node();
