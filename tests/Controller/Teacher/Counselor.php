@@ -15,8 +15,15 @@ class Counselor
 {
 
     public function __construct()
-    { }
-
+    {
+    }
+    /**
+     * @Middleware
+     */
+    public function auth(Request $req, Response $res)
+    {
+        $req->set('auth', 'murong');
+    }
     /**
      * @Router(path="get",method="POST")
      */
